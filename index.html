@@ -1,0 +1,664 @@
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>AI 이미지 영어 퀴즈</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+        <style>
+            body {
+                font-family: 'Noto Sans KR', sans-serif;
+                background-color: #FFFBEB;
+                background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23FBCFE8' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            }
+            .card {
+                background-color: white;
+                border-radius: 1.5rem;
+                border: 3px solid #FBCFE8;
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+                padding: 2rem;
+                transition: all 0.3s ease;
+            }
+            .btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0.8rem 1.6rem;
+                border-radius: 9999px;
+                font-weight: 700;
+                font-size: 1.125rem;
+                text-align: center;
+                cursor: pointer;
+                border-bottom: 4px solid rgba(0,0,0,0.2);
+                transition: all 0.2s ease;
+            }
+            .btn:active {
+                transform: translateY(2px);
+                border-bottom-width: 2px;
+            }
+            .btn-pink { background-color: #F9A8D4; color: white; border-color: #F472B6; }
+            .btn-pink:hover { background-color: #F472B6; }
+            .btn-blue { background-color: #93C5FD; color: white; border-color: #60A5FA; }
+            .btn-blue:hover { background-color: #60A5FA; }
+            .btn-yellow { background-color: #FDE047; color: #422006; border-color: #FACC15; }
+            .btn-yellow:hover { background-color: #FACC15; }
+            .btn-green { background-color: #A7F3D0; color: #047857; border-color: #6EE7B7; }
+            .btn-green:hover { background-color: #6EE7B7; }
+            .btn-purple { background-color: #C4B5FD; color: white; border-color: #A78BFA; }
+            .btn-purple:hover { background-color: #A78BFA; }
+            .btn-gray { background-color: #e5e7eb; color: #374151; border-color: #9ca3af; }
+            .btn-gray:hover { background-color: #d1d5db; }
+            .btn-disabled { background-color: #d1d5db; cursor: not-allowed; border-bottom-width: 2px; color: #6b7280; }
+            .option-btn { width: 100%; text-align: center; padding: 1rem; margin-bottom: 0.75rem; border: 2px solid #D1D5DB; background-color: #F9FAFB; border-radius: 1rem; font-size: 1.25rem; }
+            .option-btn:hover { background-color: #FEF3C7; border-color: #FDE047; }
+            .correct { background-color: #D1FAE5 !important; border-color: #34D399 !important; color: #065F46; }
+            .incorrect { background-color: #FEE2E2 !important; border-color: #F87171 !important; color: #991B1B; }
+            .modal-backdrop { position: fixed; inset: 0; background-color: rgba(0,0,0,0.5); z-index: 50; }
+            #toast {
+                position: fixed;
+                bottom: -100px;
+                left: 50%;
+                transform: translateX(-50%);
+                padding: 1rem 2rem;
+                border-radius: 9999px;
+                background-color: #22c55e;
+                color: white;
+                font-weight: 700;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                transition: bottom 0.5s ease-in-out;
+                z-index: 100;
+            }
+        </style>
+    </head>
+    <body class="flex items-center justify-center min-h-screen p-4">
+
+        <div class="w-full max-w-2xl mx-auto">
+            <div id="setup-screen" class="card">
+                <h1 class="text-4xl font-bold text-center text-pink-500 mb-2">AI 영어 퀴즈</h1>
+                <p class="text-center text-gray-500 text-lg mb-6">단어장을 사진으로 찍거나, 저장된 단어장을 열어봐!</p>
+
+                <div class="flex flex-col items-center gap-4">
+                    <input type="file" id="image-uploader" class="hidden" accept="image/*">
+                    <label for="image-uploader" class="btn btn-pink">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                        새로운 사진 올리기
+                    </label>
+                    <button id="load-wordbook-btn" class="btn btn-blue">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
+                        저장된 단어장 열기
+                    </button>
+                </div>
+
+                <div id="image-preview-container" class="text-center hidden mt-4">
+                    <img id="image-preview" class="rounded-xl border-4 border-pink-200 inline-block max-h-60" alt="선택한 이미지 미리보기">
+                    <button id="generate-quiz-btn" class="btn btn-blue mt-4 w-full md:w-auto">
+                        이 사진으로 퀴즈 만들기!
+                    </button>
+                </div>
+                
+                <div id="loading" class="text-center mt-4 hidden">
+                    <p class="text-blue-600 text-lg">AI가 사진을 읽고 있어요! 잠시만요~</p>
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-4 border-blue-400 mx-auto mt-2"></div>
+                </div>
+
+                <div id="quiz-type-selection" class="mt-6 text-center hidden">
+                    <p class="font-bold text-2xl mb-4 text-pink-500">어떤 퀴즈를 풀어볼까?</p>
+                    <div id="quiz-options-container" class="space-y-4"></div>
+                    <div class="mt-6 flex flex-col sm:flex-row gap-4 justify-center">
+                        <button id="save-wordbook-btn" class="btn btn-green">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 002 2z" /></svg>
+                            이 단어장 저장하기
+                        </button>
+                        <button id="show-word-list-btn" class="btn btn-yellow">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10m0-5h16" /></svg>
+                            단어 목록 확인
+                        </button>
+                    </div>
+                    <button id="back-to-setup-btn" class="btn btn-gray mt-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
+                        처음으로
+                    </button>
+                </div>
+            </div>
+
+            <div id="quiz-screen" class="card hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <button id="back-to-type-selection-btn" class="btn btn-gray !p-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+                    </button>
+                    <h2 id="quiz-title" class="text-3xl font-bold text-pink-500 text-center flex-grow">영어 퀴즈</h2>
+                    <div id="progress" class="text-2xl font-bold text-blue-500"></div>
+                </div>
+                <div id="question-card" class="bg-blue-50 p-6 rounded-2xl text-center mb-6 border-2 border-blue-200">
+                    <p id="question-prompt" class="text-lg text-blue-500 font-bold"></p>
+                    <p id="question" class="text-4xl font-bold text-blue-900 mt-2"></p>
+                </div>
+                <div id="answer-area"></div>
+                <div id="feedback" class="mt-4 text-center font-bold text-2xl"></div>
+                <div id="example-sentence-area" class="mt-4 p-4 bg-green-50 rounded-lg border-2 border-green-200 hidden"></div>
+                <button id="next-btn" class="btn btn-blue w-full mt-4 hidden">다음 문제로 슝!</button>
+            </div>
+
+            <div id="result-screen" class="card hidden text-center">
+                <h2 class="text-4xl font-bold text-pink-500 mb-4">참 잘했어요!</h2>
+                <p id="score" class="text-6xl font-bold text-yellow-500 mb-2"></p>
+                <p id="score-text" class="text-2xl text-gray-600 mb-8"></p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button id="retry-incorrect-btn" class="btn btn-purple hidden">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.085a2 2 0 00-1.736.97l-1.9 3.8a2 2 0 00.38 2.54l.7 1.212M7 20h4m7-10l-7 10" /></svg>
+                        틀린 문제만 다시 풀기
+                    </button>
+                    <button id="restart-btn" class="btn btn-pink">처음부터 다시 할래요</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modals and Toast -->
+        <div id="word-list-modal" class="modal-backdrop hidden flex items-center justify-center p-4">
+            <div class="card w-full max-w-lg max-h-[80vh] flex flex-col">
+                <h3 class="text-3xl font-bold text-center text-pink-500 mb-4">단어 목록</h3>
+                <div id="word-list-container" class="flex-grow min-h-0 overflow-y-auto bg-yellow-50 rounded-lg p-4 space-y-2 border-2 border-yellow-200"></div>
+                <div class="mt-6 text-center"> <button class="btn btn-blue modal-close-btn">닫기</button> </div>
+            </div>
+        </div>
+        
+        <div id="saved-wordbooks-modal" class="modal-backdrop hidden flex items-center justify-center p-4">
+            <div class="card w-full max-w-lg max-h-[80vh] flex flex-col">
+                <h3 class="text-3xl font-bold text-center text-pink-500 mb-4">나만의 단어장 보관함</h3>
+                <div id="saved-wordbooks-container" class="flex-grow min-h-0 overflow-y-auto bg-blue-50 rounded-lg p-4 space-y-2 border-2 border-blue-200"></div>
+                <div class="mt-6 text-center"> <button class="btn btn-blue modal-close-btn">닫기</button> </div>
+            </div>
+        </div>
+
+        <div id="save-name-modal" class="modal-backdrop hidden flex items-center justify-center p-4">
+            <div class="card w-full max-w-lg">
+                <h3 class="text-3xl font-bold text-center text-pink-500 mb-4">단어장 이름 짓기</h3>
+                <p class="text-center text-gray-500 mb-4">이 단어장의 이름을 정해주세요!</p>
+                <input type="text" id="wordbook-name-input" class="w-full p-3 border-2 border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500" placeholder="예: 1과 단어">
+                <div class="mt-6 flex gap-4 justify-center">
+                    <button id="save-name-confirm-btn" class="btn btn-green">저장하기</button>
+                    <button id="save-name-cancel-btn" class="btn btn-gray">취소</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="confirm-delete-modal" class="modal-backdrop hidden flex items-center justify-center p-4">
+            <div class="card w-full max-w-lg">
+                <h3 class="text-3xl font-bold text-center text-red-500 mb-4">정말 삭제할까요?</h3>
+                <p id="confirm-delete-message" class="text-center text-gray-600 text-lg mb-6"></p>
+                <div class="mt-6 flex gap-4 justify-center">
+                    <button id="delete-confirm-btn" class="btn btn-pink">삭제하기</button>
+                    <button id="delete-cancel-btn" class="btn btn-gray">취소</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="toast"></div>
+
+        <script>
+            // --- DOM Elements ---
+            const setupScreen = document.getElementById('setup-screen');
+            const quizScreen = document.getElementById('quiz-screen');
+            const resultScreen = document.getElementById('result-screen');
+            
+            const imageUploader = document.getElementById('image-uploader');
+            const imagePreviewContainer = document.getElementById('image-preview-container');
+            const imagePreview = document.getElementById('image-preview');
+            const generateQuizBtn = document.getElementById('generate-quiz-btn');
+            const loadWordbookBtn = document.getElementById('load-wordbook-btn');
+            const loading = document.getElementById('loading');
+            
+            const quizTypeSelection = document.getElementById('quiz-type-selection');
+            const quizOptionsContainer = document.getElementById('quiz-options-container');
+            const backToSetupBtn = document.getElementById('back-to-setup-btn');
+            const showWordListBtn = document.getElementById('show-word-list-btn');
+            const saveWordbookBtn = document.getElementById('save-wordbook-btn');
+
+            const quizTitle = document.getElementById('quiz-title');
+            const progressText = document.getElementById('progress');
+            const questionPrompt = document.getElementById('question-prompt');
+            const questionText = document.getElementById('question');
+            const answerArea = document.getElementById('answer-area');
+            const feedbackText = document.getElementById('feedback');
+            const exampleSentenceArea = document.getElementById('example-sentence-area');
+            const nextBtn = document.getElementById('next-btn');
+            const backToTypeSelectionBtn = document.getElementById('back-to-type-selection-btn');
+            
+            const scoreTextEl = document.getElementById('score');
+            const scoreSubText = document.getElementById('score-text');
+            const restartBtn = document.getElementById('restart-btn');
+            const retryIncorrectBtn = document.getElementById('retry-incorrect-btn');
+
+            const wordListModal = document.getElementById('word-list-modal');
+            const wordListContainer = document.getElementById('word-list-container');
+            const savedWordbooksModal = document.getElementById('saved-wordbooks-modal');
+            const savedWordbooksContainer = document.getElementById('saved-wordbooks-container');
+            const saveNameModal = document.getElementById('save-name-modal');
+            const confirmDeleteModal = document.getElementById('confirm-delete-modal');
+            const toast = document.getElementById('toast');
+            
+            // --- [중요!] 나만의 AI 마법 열쇠 (API 키) ---
+            // 1단계: 구글 AI 스튜디오에서 API 키를 발급받으세요.
+            // 2단계: 발급받은 키를 아래 "" 안에 붙여넣어 주세요.
+            const GEMINI_API_KEY = "AIzaSyDuuMV6i0JCX9GFRQ7P18aIg0y1eFGI8ec"; 
+            
+            // --- App State ---
+            let originalQuizData = [];
+            let quizData = [];
+            let incorrectAnswers = [];
+            let currentQuestionIndex = 0;
+            let score = 0;
+            let quizConfig = {};
+            let imageDataUrl = null;
+
+            // --- Event Listeners ---
+            imageUploader.addEventListener('change', handleImageUpload);
+            generateQuizBtn.addEventListener('click', handleGenerateQuiz);
+            loadWordbookBtn.addEventListener('click', showSavedWordbooks);
+            saveWordbookBtn.addEventListener('click', openSaveNameModal);
+            nextBtn.addEventListener('click', showNextQuestion);
+            restartBtn.addEventListener('click', resetApp);
+            retryIncorrectBtn.addEventListener('click', startRetryQuiz);
+            showWordListBtn.addEventListener('click', displayWordList);
+            document.querySelectorAll('.modal-close-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    wordListModal.classList.add('hidden');
+                    savedWordbooksModal.classList.add('hidden');
+                });
+            });
+            backToSetupBtn.addEventListener('click', resetApp);
+            backToTypeSelectionBtn.addEventListener('click', () => {
+                quizScreen.classList.add('hidden');
+                quizTypeSelection.classList.remove('hidden');
+            });
+
+            // --- Functions ---
+            function showToast(message) {
+                toast.textContent = message;
+                toast.style.bottom = '20px';
+                setTimeout(() => {
+                    toast.style.bottom = '-100px';
+                }, 3000);
+            }
+
+            function handleImageUpload(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imageDataUrl = e.target.result;
+                    imagePreview.src = imageDataUrl;
+                    imagePreviewContainer.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+
+            async function handleGenerateQuiz() {
+                if (!imageDataUrl) return;
+                if (GEMINI_API_KEY === "") {
+                    alert("AI 마법 열쇠(API 키)가 필요해요! 코드에 API 키를 넣어주세요.");
+                    return;
+                }
+                loading.classList.remove('hidden');
+                imagePreviewContainer.classList.add('hidden');
+                try {
+                    const base64ImageData = imageDataUrl.split(',')[1];
+                    const prompt = `이 이미지에 나열된 단어와 뜻의 쌍을 분석해주세요. 각 쌍에 대해 단어와 뜻을 각각 'term1', 'term2'로, 각 언어를 'lang1', 'lang2' ('en' for English, 'ko' for Korean)로 지정하여 JSON 배열로 반환해주세요. 예: [{'term1': 'apple', 'lang1': 'en', 'term2': '사과', 'lang2': 'ko'}]`;
+                    const payload = {
+                        contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: "image/jpeg", data: base64ImageData } }] }],
+                        generationConfig: { responseMimeType: "application/json" }
+                    };
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error(`API 요청 실패: ${response.status}`);
+                    const result = await response.json();
+                    if (result.candidates && result.candidates[0].content && result.candidates[0].content.parts[0].text) {
+                        const rawText = result.candidates[0].content.parts[0].text;
+                        const cleanedJson = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+                        const parsedData = JSON.parse(cleanedJson);
+                        if (parsedData && parsedData.length > 0 && parsedData[0].term1 && parsedData[0].term2) {
+                            originalQuizData = parsedData;
+                            loading.classList.add('hidden');
+                            populateQuizOptions();
+                            quizTypeSelection.classList.remove('hidden');
+                        } else { throw new Error("이미지에서 유효한 단어/뜻 쌍을 찾을 수 없습니다."); }
+                    } else { throw new Error("AI가 응답을 생성하지 못했습니다. 다른 이미지를 시도해보세요."); }
+                } catch (error) {
+                    console.error('퀴즈 생성 오류:', error);
+                    loading.classList.add('hidden');
+                    imagePreviewContainer.classList.remove('hidden');
+                    alert("퀴즈를 만들다가 오류가 발생했어요! 사진이 선명한지 확인하고 다시 시도해주세요.");
+                }
+            }
+
+            function getLanguageName(langCode) { return langCode === 'en' ? '영어' : '한글'; }
+
+            function populateQuizOptions() {
+                quizOptionsContainer.innerHTML = '';
+                const firstItem = originalQuizData[0];
+                const lang1 = firstItem.lang1;
+                const lang2 = firstItem.lang2;
+                const langName1 = getLanguageName(lang1);
+                const langName2 = getLanguageName(lang2);
+                const options = [
+                    { label: `${langName2} 뜻 보고 ${langName1} 단어 맞히기`, config: { questionKey: 'term2', answerKey: 'term1', questionPrompt: `다음 뜻을 가진 ${langName1} 단어는 무엇일까?` } },
+                    { label: `${langName1} 단어 보고 ${langName2} 뜻 맞히기`, config: { questionKey: 'term1', answerKey: 'term2', questionPrompt: `다음 단어의 ${langName2} 뜻은 무엇일까?` } }
+                ];
+                options.forEach(option => {
+                    const container = document.createElement('div');
+                    container.className = 'bg-pink-50 p-4 rounded-xl border-2 border-pink-100';
+                    const title = document.createElement('p');
+                    title.className = 'font-bold text-xl text-pink-600 mb-2';
+                    title.textContent = option.label;
+                    container.appendChild(title);
+
+                    const btnGroup = document.createElement('div');
+                    btnGroup.className = 'flex gap-2 justify-center';
+                    
+                    const shortAnswerBtn = document.createElement('button');
+                    shortAnswerBtn.textContent = '주관식';
+                    shortAnswerBtn.className = 'btn btn-pink !text-base !py-2 !px-4';
+                    shortAnswerBtn.onclick = () => startQuiz({ ...option.config, type: 'short' });
+                    btnGroup.appendChild(shortAnswerBtn);
+
+                    const mcqBtn = document.createElement('button');
+                    mcqBtn.textContent = '객관식';
+                    mcqBtn.className = 'btn btn-blue !text-base !py-2 !px-4';
+                    mcqBtn.onclick = () => startQuiz({ ...option.config, type: 'multiple' });
+                    btnGroup.appendChild(mcqBtn);
+
+                    container.appendChild(btnGroup);
+                    quizOptionsContainer.appendChild(container);
+                });
+            }
+
+            function displayWordList() {
+                wordListContainer.innerHTML = '';
+                originalQuizData.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'flex justify-between items-center bg-white p-3 rounded-md text-lg';
+                    const term1 = document.createElement('span');
+                    term1.className = 'font-bold text-blue-700';
+                    term1.textContent = item.term1;
+                    const term2 = document.createElement('span');
+                    term2.className = 'text-pink-700';
+                    term2.textContent = item.term2;
+                    div.appendChild(term1);
+                    div.appendChild(term2);
+                    wordListContainer.appendChild(div);
+                });
+                wordListModal.classList.remove('hidden');
+            }
+
+            function startQuiz(config, isRetry = false) {
+                quizConfig = config;
+                currentQuestionIndex = 0;
+                score = 0;
+                if (!isRetry) {
+                    quizData = [...originalQuizData];
+                    incorrectAnswers = [];
+                } else {
+                    quizData = [...incorrectAnswers];
+                    incorrectAnswers = [];
+                }
+                
+                quizData = quizData.sort(() => Math.random() - 0.5);
+                setupScreen.classList.add('hidden');
+                resultScreen.classList.add('hidden');
+                quizScreen.classList.remove('hidden');
+                quizTypeSelection.classList.add('hidden');
+                displayQuestion();
+            }
+
+            function startRetryQuiz() {
+                if (incorrectAnswers.length > 0) {
+                    startQuiz(quizConfig, true);
+                }
+            }
+
+            function displayQuestion() {
+                feedbackText.innerHTML = '';
+                exampleSentenceArea.classList.add('hidden');
+                nextBtn.classList.add('hidden');
+                const currentQuestion = quizData[currentQuestionIndex];
+                quizTitle.textContent = `알쏭달쏭 단어 퀴즈`;
+                progressText.textContent = `${currentQuestionIndex + 1} / ${quizData.length}`;
+                questionPrompt.textContent = quizConfig.questionPrompt;
+                questionText.textContent = currentQuestion[quizConfig.questionKey];
+                answerArea.innerHTML = '';
+                if (quizConfig.type === 'short') {
+                    answerArea.innerHTML = `<input type="text" id="short-answer-input" class="w-full p-3 border-2 border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500" placeholder="정답을 적어봐!"><button id="submit-short-answer" class="btn btn-pink w-full mt-4">정답 확인!</button>`;
+                    document.getElementById('submit-short-answer').addEventListener('click', checkShortAnswer);
+                    document.getElementById('short-answer-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') checkShortAnswer(); });
+                } else {
+                    const options = generateMultipleChoiceOptions(currentQuestion[quizConfig.answerKey]);
+                    options.forEach(option => {
+                        const button = document.createElement('button');
+                        button.textContent = option;
+                        button.classList.add('btn', 'option-btn');
+                        button.addEventListener('click', () => checkMultipleChoiceAnswer(option));
+                        answerArea.appendChild(button);
+                    });
+                }
+            }
+            
+            function generateMultipleChoiceOptions(correctAnswer) {
+                let options = [correctAnswer];
+                const allAnswers = originalQuizData.map(item => item[quizConfig.answerKey]);
+                let wrongAnswers = allAnswers.filter(ans => ans !== correctAnswer);
+                wrongAnswers = wrongAnswers.sort(() => Math.random() - 0.5);
+                const optionsNeeded = Math.min(3, wrongAnswers.length);
+                for (let i = 0; i < optionsNeeded; i++) { options.push(wrongAnswers[i]); }
+                return options.sort(() => Math.random() - 0.5);
+            }
+
+            function handleCorrectAnswer(correctWord) {
+                feedbackText.innerHTML = `
+                    <span class="text-green-500">딩동댕! 정답이에요! ✨</span>
+                    <button id="get-example-btn" class="btn btn-green !text-sm !py-1 !px-3 ml-2">✨ AI 예문 보기</button>
+                `;
+                score++;
+                document.getElementById('get-example-btn').addEventListener('click', (e) => {
+                    e.target.disabled = true;
+                    e.target.innerHTML = 'AI가 예문을 만들고 있어요...';
+                    fetchExampleSentence(correctWord);
+                });
+            }
+
+            function handleIncorrectAnswer(correctWord) {
+                feedbackText.innerHTML = `<span class="text-red-500">아쉽다! 정답은 '${correctWord}' 였어요.</span>`;
+                const currentQuestion = quizData[currentQuestionIndex];
+                incorrectAnswers.push(currentQuestion);
+            }
+
+            function checkShortAnswer() {
+                const input = document.getElementById('short-answer-input');
+                const userAnswer = input.value.trim().toLowerCase();
+                const currentQuestion = quizData[currentQuestionIndex];
+                const correctAnswer = currentQuestion[quizConfig.answerKey].toLowerCase();
+                input.disabled = true;
+                document.getElementById('submit-short-answer').disabled = true;
+                if (userAnswer === correctAnswer) {
+                    handleCorrectAnswer(currentQuestion[quizConfig.answerKey]);
+                } else {
+                    handleIncorrectAnswer(currentQuestion[quizConfig.answerKey]);
+                }
+                nextBtn.classList.remove('hidden');
+            }
+
+            function checkMultipleChoiceAnswer(selectedOption) {
+                const currentQuestion = quizData[currentQuestionIndex];
+                const correctAnswer = currentQuestion[quizConfig.answerKey];
+                const buttons = answerArea.querySelectorAll('.option-btn');
+                buttons.forEach(button => {
+                    button.disabled = true;
+                    if (button.textContent === correctAnswer) button.classList.add('correct');
+                    else if (button.textContent === selectedOption) button.classList.add('incorrect');
+                });
+                if (selectedOption === correctAnswer) {
+                    handleCorrectAnswer(correctAnswer);
+                } else {
+                    handleIncorrectAnswer(correctAnswer);
+                }
+                nextBtn.classList.remove('hidden');
+            }
+
+            async function fetchExampleSentence(word) {
+                if (GEMINI_API_KEY === "") {
+                    exampleSentenceArea.innerHTML = '<p class="text-red-500 text-center">AI 마법 열쇠(API 키)가 없어서 예문을 만들 수 없어요.</p>';
+                    return;
+                }
+                exampleSentenceArea.classList.remove('hidden');
+                exampleSentenceArea.innerHTML = '<p class="text-center">AI가 예문을 만들고 있어요...</p>';
+                try {
+                    const prompt = `Create a simple and easy-to-understand English example sentence for a first-grader using the word '${word}'. Also provide its Korean translation. Return the result in a JSON format like: {"english": "...", "korean": "..."}.`;
+                    const payload = {
+                        contents: [{ parts: [{ text: prompt }] }],
+                        generationConfig: { responseMimeType: "application/json" }
+                    };
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error('API request failed');
+                    const result = await response.json();
+                    const sentenceData = JSON.parse(result.candidates[0].content.parts[0].text);
+                    exampleSentenceArea.innerHTML = `
+                        <p class="font-bold text-lg text-green-800">${sentenceData.english}</p>
+                        <p class="text-gray-600">${sentenceData.korean}</p>
+                    `;
+                } catch (error) {
+                    console.error("Error fetching example sentence:", error);
+                    exampleSentenceArea.innerHTML = '<p class="text-red-500 text-center">앗! 예문을 만드는데 실패했어요.</p>';
+                }
+            }
+
+            function showNextQuestion() {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < quizData.length) displayQuestion();
+                else showResults();
+            }
+
+            function showResults() {
+                quizScreen.classList.add('hidden');
+                resultScreen.classList.remove('hidden');
+                const percentage = Math.round((score / quizData.length) * 100);
+                scoreTextEl.textContent = `💯 ${percentage}점`;
+                scoreSubText.textContent = `${quizData.length}개 중에서 ${score}개를 맞혔어!`;
+                if (incorrectAnswers.length > 0) {
+                    retryIncorrectBtn.classList.remove('hidden');
+                } else {
+                    retryIncorrectBtn.classList.add('hidden');
+                }
+            }
+            
+            function resetApp() {
+                originalQuizData = [];
+                quizData = [];
+                incorrectAnswers = [];
+                currentQuestionIndex = 0;
+                score = 0;
+                quizConfig = {};
+                imageDataUrl = null;
+                resultScreen.classList.add('hidden');
+                quizScreen.classList.add('hidden');
+                quizTypeSelection.classList.add('hidden');
+                setupScreen.classList.remove('hidden');
+                imageUploader.value = '';
+                imagePreviewContainer.classList.add('hidden');
+                quizOptionsContainer.innerHTML = '';
+                loading.classList.add('hidden');
+            }
+
+            // --- LocalStorage Functions ---
+            function getSavedWordbooks() {
+                return JSON.parse(localStorage.getItem('myWordbooks')) || {};
+            }
+
+            function saveWordbooks(wordbooks) {
+                localStorage.setItem('myWordbooks', JSON.stringify(wordbooks));
+            }
+
+            function openSaveNameModal() {
+                const nameInput = document.getElementById('wordbook-name-input');
+                const saveConfirmBtn = document.getElementById('save-name-confirm-btn');
+                const saveCancelBtn = document.getElementById('save-name-cancel-btn');
+                nameInput.value = `단어장 ${new Date().toLocaleDateString()}`;
+                saveNameModal.classList.remove('hidden');
+                saveConfirmBtn.onclick = () => {
+                    const name = nameInput.value;
+                    if (name && name.trim() !== "") {
+                        const wordbooks = getSavedWordbooks();
+                        wordbooks[name.trim()] = originalQuizData;
+                        saveWordbooks(wordbooks);
+                        showToast(`'${name.trim()}'으로 저장했어요! 쏙! ✨`);
+                        saveNameModal.classList.add('hidden');
+                    }
+                };
+                saveCancelBtn.onclick = () => {
+                    saveNameModal.classList.add('hidden');
+                };
+            }
+
+            function showSavedWordbooks() {
+                const wordbooks = getSavedWordbooks();
+                savedWordbooksContainer.innerHTML = '';
+                const names = Object.keys(wordbooks);
+                if (names.length === 0) {
+                    savedWordbooksContainer.innerHTML = '<p class="text-center text-gray-500">아직 저장된 단어장이 없어요!</p>';
+                } else {
+                    names.forEach(name => {
+                        const div = document.createElement('div');
+                        div.className = 'flex justify-between items-center bg-white p-3 rounded-lg';
+                        const nameSpan = document.createElement('span');
+                        nameSpan.className = 'font-bold text-lg text-blue-800';
+                        nameSpan.textContent = name;
+                        const btnGroup = document.createElement('div');
+                        btnGroup.className = 'flex gap-2';
+                        const loadBtn = document.createElement('button');
+                        loadBtn.textContent = '열기';
+                        loadBtn.className = 'btn !p-2 !text-sm btn-blue';
+                        loadBtn.onclick = () => {
+                            originalQuizData = wordbooks[name];
+                            savedWordbooksModal.classList.add('hidden');
+                            populateQuizOptions();
+                            quizTypeSelection.classList.remove('hidden');
+                        };
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.textContent = '삭제';
+                        deleteBtn.className = 'btn !p-2 !text-sm btn-gray';
+                        deleteBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            openConfirmDeleteModal(name);
+                        };
+                        btnGroup.appendChild(loadBtn);
+                        btnGroup.appendChild(deleteBtn);
+                        div.appendChild(nameSpan);
+                        div.appendChild(btnGroup);
+                        savedWordbooksContainer.appendChild(div);
+                    });
+                }
+                savedWordbooksModal.classList.remove('hidden');
+            }
+
+            function openConfirmDeleteModal(name) {
+                const confirmMsg = document.getElementById('confirm-delete-message');
+                const confirmBtn = document.getElementById('delete-confirm-btn');
+                const cancelBtn = document.getElementById('delete-cancel-btn');
+                confirmMsg.textContent = `'${name}' 단어장을 정말 지울까요?`;
+                confirmDeleteModal.classList.remove('hidden');
+                confirmBtn.onclick = () => {
+                    const wordbooks = getSavedWordbooks();
+                    delete wordbooks[name];
+                    saveWordbooks(wordbooks);
+                    showSavedWordbooks();
+                    confirmDeleteModal.classList.add('hidden');
+                };
+                cancelBtn.onclick = () => {
+                    confirmDeleteModal.classList.add('hidden');
+                };
+            }
+        </script>
+    </body>
+    </html>
